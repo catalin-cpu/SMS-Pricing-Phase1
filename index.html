@@ -582,6 +582,61 @@ function closeTrial() {
   document.getElementById('trial-overlay').style.display = 'none';
   document.body.style.overflow = '';
 }
+
+function openSmsModal() {
+  document.getElementById('sms-modal').style.display = 'flex';
+  document.getElementById('sms-qty-input').value = '';
+  document.getElementById('sms-price-display').textContent = '';
+  document.getElementById('sms-qty-input').focus();
+}
+
+function closeSmsModal() {
+  document.getElementById('sms-modal').style.display = 'none';
+}
+
+let _smsType = 'onetime';
+
+function setSmsType(type) {
+  _smsType = type;
+  const onetime   = document.getElementById('sms-type-onetime');
+  const recurring = document.getElementById('sms-type-recurring');
+  onetime.style.borderColor   = type === 'onetime'   ? '#0db5b5' : '#e2e8f0';
+  onetime.style.background    = type === 'onetime'   ? '#f0fdfd' : 'white';
+  recurring.style.borderColor = type === 'recurring' ? '#0db5b5' : '#e2e8f0';
+  recurring.style.background  = type === 'recurring' ? '#f0fdfd' : 'white';
+  calcSmsPrice();
+}
+
+function openSmsModal() {
+  _smsType = 'onetime';
+  setSmsType('onetime');
+  document.getElementById('sms-modal').style.display = 'flex';
+  document.getElementById('sms-qty-input').value = '';
+  document.getElementById('sms-price-display').textContent = '';
+  document.getElementById('sms-qty-input').focus();
+}
+
+function closeSmsModal() {
+  document.getElementById('sms-modal').style.display = 'none';
+}
+
+function calcSmsPrice() {
+  const qty = parseInt(document.getElementById('sms-qty-input').value) || 0;
+  const display = document.getElementById('sms-price-display');
+  if (qty > 0) {
+    const cost = (qty * 0.03).toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+    if (_smsType === 'onetime') {
+      display.innerHTML = `<span style="font-size:12px;color:#64748b">One-time charge:</span><br><span style="font-size:22px;font-weight:700;color:#17293c">$${cost}</span><span style="font-size:13px;color:#64748b"> this month only</span>`;
+      document.getElementById('sms-confirm-btn').textContent = 'Purchase now';
+    } else {
+      display.innerHTML = `<span style="font-size:12px;color:#64748b">Added to your monthly bill:</span><br><span style="font-size:22px;font-weight:700;color:#17293c">$${cost}</span><span style="font-size:13px;color:#64748b"> / mo</span>`;
+      document.getElementById('sms-confirm-btn').textContent = 'Add to subscription';
+    }
+  } else {
+    display.textContent = '';
+    document.getElementById('sms-confirm-btn').textContent = 'Add to plan';
+  }
+}
 </script>
 
 <!-- Billing page overlay -->
@@ -645,6 +700,15 @@ function closeTrial() {
             </div>
             <button style="width:100%;padding:11px;background:#0db5b5;border:none;border-radius:8px;color:white;font-weight:600;font-size:13px;cursor:pointer">Subscribe now</button>
           </div>
+          <!-- Purchase extra SMS -->
+          <div style="margin-top:16px;background:white;border-radius:12px;padding:20px;border:1px solid #e2e8f0">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:4px">
+              <span style="font-size:20px">💬</span>
+              <span style="font-size:14px;font-weight:600;color:#17293c">Need more SMS?</span>
+            </div>
+            <p style="font-size:12px;color:#64748b;margin-bottom:14px">Purchase additional monthly SMS credits on top of your plan limit.</p>
+            <button onclick="openSmsModal()" style="width:100%;padding:10px;background:white;border:1.5px solid #0db5b5;border-radius:8px;color:#0db5b5;font-weight:600;font-size:13px;cursor:pointer">+ Purchase more SMS</button>
+          </div>
         </div>
         <!-- Usage -->
         <div>
@@ -698,6 +762,38 @@ function closeTrial() {
           </div>
         </div>
       </div>
+    </div>
+  </div>
+</div>
+
+<!-- SMS purchase modal -->
+<div id="sms-modal" style="display:none;position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,0.45);align-items:center;justify-content:center">
+  <div style="background:white;border-radius:16px;padding:32px;width:100%;max-width:440px;margin:16px;box-shadow:0 20px 60px rgba(0,0,0,0.2)">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:6px">
+      <h2 style="font-size:18px;font-weight:700;color:#17293c">Purchase extra SMS</h2>
+      <button onclick="closeSmsModal()" style="background:none;border:none;font-size:22px;color:#94a3b8;cursor:pointer;line-height:1">×</button>
+    </div>
+    <p style="font-size:13px;color:#64748b;margin-bottom:20px">Extra SMS are billed at <strong>$0.03 per SMS</strong>.</p>
+    <!-- Purchase type toggle -->
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:20px">
+      <label id="sms-type-onetime" onclick="setSmsType('onetime')" style="cursor:pointer;border:2px solid #0db5b5;border-radius:10px;padding:12px;background:#f0fdfd">
+        <div style="font-size:13px;font-weight:700;color:#17293c;margin-bottom:3px">🗓 One-time</div>
+        <div style="font-size:11px;color:#64748b">Current month only, does not renew</div>
+      </label>
+      <label id="sms-type-recurring" onclick="setSmsType('recurring')" style="cursor:pointer;border:2px solid #e2e8f0;border-radius:10px;padding:12px;background:white">
+        <div style="font-size:13px;font-weight:700;color:#17293c;margin-bottom:3px">🔄 Recurring</div>
+        <div style="font-size:11px;color:#64748b">Added to your subscription every month</div>
+      </label>
+    </div>
+    <label style="font-size:13px;font-weight:600;color:#17293c;display:block;margin-bottom:8px">How many extra SMS per month do you need?</label>
+    <input id="sms-qty-input" type="number" min="1" step="1" placeholder="e.g. 500"
+      oninput="calcSmsPrice()"
+      style="width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:15px;color:#17293c;outline:none;font-family:inherit"
+      onfocus="this.style.borderColor='#0db5b5'" onblur="this.style.borderColor='#e2e8f0'">
+    <div id="sms-price-display" style="min-height:48px;margin-top:14px;text-align:center;padding:12px 16px;background:#f8fafc;border-radius:8px"></div>
+    <div style="display:flex;gap:10px;margin-top:20px">
+      <button onclick="closeSmsModal()" style="flex:1;padding:11px;background:white;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#64748b">Cancel</button>
+      <button id="sms-confirm-btn" style="flex:2;padding:11px;background:#0db5b5;border:none;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:white">Add to plan</button>
     </div>
   </div>
 </div>
