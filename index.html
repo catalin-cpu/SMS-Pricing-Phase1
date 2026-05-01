@@ -1,0 +1,720 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex, nofollow">
+<title>Touch Stay — SMS Pricing Prototype</title>
+<script>
+(function(){
+  var correct = '1608';
+  var stored = sessionStorage.getItem('ts_pin');
+  if (stored !== correct) {
+    var attempt = prompt('Enter PIN to access this page:');
+    if (attempt !== correct) {
+      document.documentElement.innerHTML = '<div style="font-family:sans-serif;text-align:center;padding:100px;color:#64748b"><h2>Access Denied</h2><p>Incorrect PIN. Please refresh and try again.</p></div>';
+      throw new Error('Access denied');
+    }
+    sessionStorage.setItem('ts_pin', correct);
+  }
+})();
+</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --teal:#0db5b5;--teal-lt:#16caca;--navy:#17293c;
+  --bg:#f1f5f9;--white:#fff;--border:#e2e8f0;
+  --text:#17293c;--muted:#64748b;
+  --yellow:#f5c61a;--yellow-bg:#fffbeb;
+  --purple:#8b5cf6;--starter-dot:#0dd9c9;--growth-dot:#f5c61a;--pro-dot:#8b5cf6;
+  --green:#1ec67e;--radius:12px;
+}
+body{font-family:'Inter',-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:14px;line-height:1.5;-webkit-font-smoothing:antialiased}
+
+/* NAV */
+nav{background:var(--white);border-bottom:1px solid var(--border);height:58px;display:flex;align-items:center;padding:0 32px;position:sticky;top:0;z-index:200;gap:28px}
+.nav-logo{display:flex;align-items:center;gap:8px;font-weight:700;font-size:15px;color:var(--navy);text-decoration:none;flex-shrink:0}
+.nav-logo svg{color:var(--teal)}
+.nav-links{display:flex;gap:0;list-style:none;overflow-x:auto}
+.nav-links a{display:block;padding:0 14px;height:58px;line-height:58px;color:var(--muted);text-decoration:none;font-size:13px;font-weight:500;white-space:nowrap}
+.nav-links a:hover,.nav-links a.active{color:var(--navy)}
+.nav-cta{margin-left:auto;display:flex;gap:10px;align-items:center;flex-shrink:0}
+.btn-outline{padding:7px 16px;border:1.5px solid var(--border);border-radius:8px;background:white;font-size:13px;font-weight:600;cursor:pointer;color:var(--navy)}
+.btn-primary{padding:7px 16px;border:none;border-radius:8px;background:var(--navy);font-size:13px;font-weight:600;cursor:pointer;color:white}
+
+/* HERO */
+.hero{padding:44px 32px 24px;max-width:1200px;margin:0 auto}
+.hero h1{font-size:38px;font-weight:300;color:var(--muted);line-height:1.2}
+.hero h1 strong{color:var(--navy);font-weight:800}
+.hero-sub{color:var(--muted);margin-top:8px;font-size:15px}
+.controls-row{display:flex;align-items:center;justify-content:space-between;margin-top:24px;flex-wrap:wrap;gap:16px}
+.type-tabs{display:flex;gap:4px;flex-wrap:wrap}
+.type-tab{padding:8px 18px;border-radius:99px;border:none;background:transparent;font-size:13px;font-weight:500;cursor:pointer;color:var(--muted);transition:all .15s}
+.type-tab.active{background:var(--navy);color:white}
+.type-tab:hover:not(.active){background:#e8ecf0}
+.qty-row{display:flex;align-items:center;gap:10px}
+.qty-label{font-size:13px;font-weight:600;color:var(--navy);white-space:nowrap}
+.qty-input-wrap{display:flex;align-items:center;border:1px solid var(--border);border-radius:8px;background:white;overflow:hidden}
+.qty-input{width:64px;padding:8px 6px 8px 12px;border:none;outline:none;font-size:14px;font-weight:600;font-family:inherit}
+.qty-unit{padding:8px 12px 8px 2px;font-size:13px;color:var(--muted);display:flex;align-items:center;gap:4px;border-left:1px solid var(--border)}
+.currency-sel{padding:8px 12px;border:1px solid var(--border);border-radius:8px;background:white;font-size:13px;font-weight:600;cursor:pointer;color:var(--navy);outline:none;font-family:inherit}
+.qty-hint{font-size:11px;color:var(--muted);text-align:right;margin-top:6px;max-width:500px;margin-left:auto}
+
+/* BILLING TOGGLE */
+.billing-section{text-align:center;padding:20px 0 12px}
+.save-label{font-size:14px;font-weight:700;color:var(--navy);margin-bottom:12px}
+.save-label u{text-decoration-color:var(--yellow);text-underline-offset:2px}
+.billing-toggle{display:inline-flex;background:var(--navy);border-radius:99px;padding:4px;gap:2px}
+.billing-btn{padding:8px 22px;border-radius:99px;border:none;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;color:rgba(255,255,255,.55);background:transparent;font-family:inherit}
+.billing-btn.active{background:white;color:var(--navy)}
+.save-pill{background:var(--yellow);color:var(--navy);font-size:10px;font-weight:700;padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:middle}
+
+/* PLAN CARDS */
+.cards-wrap{max-width:1200px;margin:0 auto;padding:0 32px 28px}
+.cards-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.plan-card{background:white;border:1.5px solid var(--border);border-radius:var(--radius);padding:22px;position:relative;transition:box-shadow .15s}
+.plan-card.featured{border-color:var(--yellow);border-width:2px}
+.best-deal{position:absolute;top:-11px;left:50%;transform:translateX(-50%);background:var(--yellow);color:var(--navy);font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;padding:3px 12px;border-radius:99px;white-space:nowrap}
+.plan-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.plan-name{font-size:17px;font-weight:700}
+.plan-dot{width:14px;height:14px;border-radius:50%;flex-shrink:0}
+.plan-desc{font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.4}
+.price-strike{font-size:14px;color:var(--muted);margin-bottom:2px;min-height:20px}
+.price-main{font-size:15px;font-weight:700;margin-bottom:2px;display:flex;align-items:baseline;gap:0;line-height:1}
+.price-main .sym{font-size:20px;font-weight:700;margin-right:1px}
+.price-main .int{font-size:36px;font-weight:800;letter-spacing:-1px}
+.price-main .dec{font-size:18px;font-weight:700}
+.price-main .per{font-size:13px;font-weight:500;color:var(--muted);margin-left:4px}
+.price-per-prop{font-size:11px;color:var(--muted);min-height:16px;margin-bottom:2px}
+.price-billed{font-size:12px;color:var(--muted);margin-bottom:14px;min-height:16px}
+.plan-cta{width:100%;padding:10px;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;margin-bottom:14px;font-family:inherit;transition:all .15s}
+.plan-cta.outline{border:1.5px solid var(--navy);background:white;color:var(--navy)}
+.plan-cta.filled{border:none;background:var(--teal);color:white}
+.plan-cta.filled:hover{background:var(--teal-lt)}
+.plan-seats{font-size:12px;color:var(--muted);margin-bottom:10px;display:flex;align-items:center;gap:5px}
+.plan-everything{font-size:12px;font-weight:700;color:var(--navy);margin-bottom:6px}
+.plan-feats{list-style:none;font-size:12px}
+.plan-feats li{padding:2px 0;display:flex;align-items:flex-start;gap:6px;color:var(--muted);line-height:1.4}
+.feat-check{width:15px;height:15px;flex-shrink:0;margin-top:1px;background:var(--green);border-radius:50%;display:inline-flex;align-items:center;justify-content:center}
+.feat-check::after{content:'';width:8px;height:8px;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 8 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 4l2 2 4-4' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-size:cover}
+.plan-see-all{font-size:12px;color:var(--yellow);font-weight:600;text-decoration:underline;cursor:pointer;background:none;border:none;margin-top:8px;font-family:inherit}
+.lets-talk{font-size:26px;font-weight:800;margin:10px 0 16px}
+.bold-feat{font-weight:700;color:var(--navy)}
+
+/* FEATURE TABLE */
+.table-wrap{max-width:1200px;margin:0 auto;padding:0 32px 60px}
+.table-title{text-align:center;font-size:20px;font-weight:700;margin-bottom:22px;color:var(--navy)}
+.feat-table{width:100%;border-collapse:collapse;background:white;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.feat-table thead tr{position:sticky;top:58px;z-index:50;background:white;box-shadow:0 1px 0 var(--border)}
+.feat-table th{padding:14px 16px;text-align:left;border-right:1px solid var(--border);vertical-align:top}
+.feat-table th:first-child{width:34%}
+.feat-table th:not(:first-child){width:16.5%;text-align:center}
+.feat-table th:last-child{border-right:none}
+.th-name{font-size:15px;font-weight:700;margin-bottom:4px;display:flex;align-items:center;justify-content:center;gap:6px}
+.th-price-strike{font-size:11px;color:var(--muted);min-height:16px}
+.th-price-main{font-size:13px;font-weight:700;color:var(--navy);min-height:18px}
+.th-billed{font-size:11px;color:var(--muted);min-height:16px;margin-bottom:8px}
+.th-cta{display:block;width:100%;padding:7px 8px;border-radius:7px;font-size:12px;font-weight:700;cursor:pointer;border:1.5px solid var(--border);background:white;color:var(--navy);font-family:inherit}
+.th-cta.filled{background:var(--teal);border-color:var(--teal);color:white}
+/* section rows */
+.feat-table tr.sec-row td{background:#f8fafc;padding:9px 16px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);border-top:1px solid var(--border)}
+/* data rows */
+.feat-table tr.dat-row td{padding:9px 16px;border-top:1px solid #f1f5f9;vertical-align:middle;font-size:13px}
+.feat-table tr.dat-row td:first-child{color:var(--text)}
+.feat-table tr.dat-row td:not(:first-child){text-align:center;border-left:1px solid #f1f5f9}
+/* highlighted SMS row */
+.feat-table tr.sms-highlight td{background:#f0fdf9}
+.sms-new-badge{display:inline-block;background:var(--teal);color:white;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;padding:1px 5px;border-radius:4px;margin-left:6px;vertical-align:middle}
+/* check icons */
+.ck-yes{display:inline-flex;width:22px;height:22px;background:var(--green);border-radius:50%;align-items:center;justify-content:center}
+.ck-yes::after{content:'';width:12px;height:12px;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 12 12' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M2 6l3 3 5-5' stroke='white' stroke-width='1.5' fill='none' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");background-size:cover}
+.ck-no{display:inline-flex;width:22px;height:22px;background:#e2e8f0;border-radius:50%;align-items:center;justify-content:center;color:#94a3b8;font-size:13px;line-height:1}
+.cell-val{font-size:12px;font-weight:600;color:var(--navy)}
+.cell-mut{font-size:12px;color:var(--muted)}
+.sms-val{font-size:12px;font-weight:700;color:var(--teal)}
+
+.footer-note{max-width:1200px;margin:0 auto;padding:0 32px 48px;font-size:11px;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<nav>
+  <a class="nav-logo" href="#">
+    <svg width="28" height="28" viewBox="0 0 28 28" fill="none"><rect width="28" height="28" rx="6" fill="#0db5b5"/><path d="M7 14c0-3.866 3.134-7 7-7s7 3.134 7 7-3.134 7-7 7" stroke="white" stroke-width="2" stroke-linecap="round"/><circle cx="14" cy="14" r="2.5" fill="white"/></svg>
+    Touch Stay
+  </a>
+  <ul class="nav-links">
+    <li><a href="#">Guidebooks</a></li>
+    <li><a href="#">Features</a></li>
+    <li><a href="#">Demo</a></li>
+    <li><a href="#" class="active">Pricing</a></li>
+    <li><a href="#">Integrations</a></li>
+    <li><a href="#">Resources</a></li>
+  </ul>
+  <div class="nav-cta">
+    <button class="btn-outline">Login</button>
+    <button class="btn-primary">Free trial</button>
+  </div>
+</nav>
+
+<div class="hero">
+  <h1>More than <strong>the guidebook for the best price</strong></h1>
+  <p class="hero-sub">Try for FREE for 14 days, no credit card required.</p>
+  <div class="controls-row">
+    <div class="type-tabs">
+      <button class="type-tab active">Short Term Rental</button>
+      <button class="type-tab">B&amp;B / Hotel</button>
+      <button class="type-tab">Glamping</button>
+      <button class="type-tab">Campsite</button>
+      <button class="type-tab">Any other guide</button>
+    </div>
+    <div class="qty-row">
+      <span class="qty-label">How many properties do you have?</span>
+      <div class="qty-input-wrap">
+        <input type="number" class="qty-input" id="qty" value="1" min="1" max="9999">
+        <span class="qty-unit">properties ▾</span>
+      </div>
+      <select class="currency-sel" id="currency">
+        <option value="usd">$ USD</option>
+        <option value="gbp">£ GBP</option>
+        <option value="eur">€ EUR</option>
+        <option value="aud">A$ AUD</option>
+      </select>
+    </div>
+  </div>
+  <p class="qty-hint">E.g. 2 apartments in a building is 2 properties, 10 cottages on a single site is 10 properties, etc.</p>
+</div>
+
+<div class="billing-section">
+  <p class="save-label">Save up to <u>30%</u> with annual payment</p>
+  <div class="billing-toggle">
+    <button class="billing-btn active" id="btnAnnual" onclick="setBilling('yearly')">Annual <span class="save-pill">Save up to 30%</span></button>
+    <button class="billing-btn" id="btnMonthly" onclick="setBilling('monthly')">Monthly</button>
+  </div>
+</div>
+
+<!-- PLAN CARDS -->
+<div class="cards-wrap">
+  <div class="cards-grid">
+
+    <!-- Starter -->
+    <div class="plan-card">
+      <div class="plan-hdr">
+        <span class="plan-name">Starter</span>
+        <span class="plan-dot" style="background:var(--starter-dot)"></span>
+      </div>
+      <p class="plan-desc">For individuals getting started</p>
+      <div class="price-strike" id="s-strike"></div>
+      <div class="price-main" id="s-price"></div>
+      <div class="price-per-prop" id="s-pp"></div>
+      <div class="price-billed" id="s-billed"></div>
+      <button class="plan-cta outline" data-plan="starter" onclick="openTrial('starter')">Start FREE trial</button>
+      <div class="plan-seats">👤 1 user seat included</div>
+      <ul class="plan-feats">
+        <li><span class="feat-check"></span>Guidebook content management</li>
+        <li><span class="feat-check"></span>Editable appearance and Custom branding</li>
+        <li><span class="feat-check"></span>Local recommendations &amp; Interactive map</li>
+        <li><span class="feat-check"></span>Store (Upsells)</li>
+      </ul>
+      <button class="plan-see-all">👇 See all features below</button>
+    </div>
+
+    <!-- Growth -->
+    <div class="plan-card featured">
+      <div class="best-deal">BEST DEAL</div>
+      <div class="plan-hdr">
+        <span class="plan-name">Growth</span>
+        <span class="plan-dot" style="background:var(--growth-dot)"></span>
+      </div>
+      <p class="plan-desc">For small teams that need messaging at scale</p>
+      <div class="price-strike" id="g-strike"></div>
+      <div class="price-main" id="g-price"></div>
+      <div class="price-per-prop" id="g-pp"></div>
+      <div class="price-billed" id="g-billed"></div>
+      <button class="plan-cta filled" data-plan="growth" onclick="openTrial('growth')">Start FREE trial</button>
+      <div class="plan-seats">👤 5 user seats</div>
+      <p class="plan-everything">Everything incl. in Starter +</p>
+      <ul class="plan-feats">
+        <li><span class="feat-check"></span>Two-way guest messaging</li>
+        <li><span class="feat-check"></span>Scheduled messages</li>
+        <li><span class="feat-check"></span>AI chatbot for guests</li>
+        <li><span class="feat-check"></span>AI-powered guidebook assistant</li>
+        <li><span class="feat-check"></span>Reviews and feedback collection</li>
+        <li><span class="feat-check"></span>Custom domain</li>
+        <li><span class="feat-check"></span><span class="bold-feat">CRM with 5,000 contacts</span></li>
+      </ul>
+      <button class="plan-see-all">👇 See all features below</button>
+    </div>
+
+    <!-- Pro -->
+    <div class="plan-card">
+      <div class="plan-hdr">
+        <span class="plan-name">Pro</span>
+        <span class="plan-dot" style="background:var(--pro-dot)"></span>
+      </div>
+      <p class="plan-desc">For advanced teams with high messaging volume</p>
+      <div class="price-strike" id="p-strike"></div>
+      <div class="price-main" id="p-price"></div>
+      <div class="price-per-prop" id="p-pp"></div>
+      <div class="price-billed" id="p-billed"></div>
+      <button class="plan-cta outline" data-plan="pro" onclick="openTrial('pro')">Start FREE trial</button>
+      <div class="plan-seats">👤 ∞ Unlimited seats</div>
+      <p class="plan-everything">Everything incl. in Growth +</p>
+      <ul class="plan-feats">
+        <li><span class="feat-check"></span>Live priority support (&lt;2 h)</li>
+        <li><span class="feat-check"></span>White glove setup (11+ guides)</li>
+        <li><span class="feat-check"></span>Content collection</li>
+        <li><span class="feat-check"></span><span class="bold-feat">CRM with 25,000 contacts</span></li>
+      </ul>
+      <button class="plan-see-all">👇 See all features below</button>
+    </div>
+
+    <!-- Custom -->
+    <div class="plan-card">
+      <div class="plan-hdr">
+        <span class="plan-name">Custom Plan</span>
+        <span class="plan-dot" style="background:var(--navy)"></span>
+      </div>
+      <p class="plan-desc">For large scale property owners / companies which need more.</p>
+      <p class="lets-talk">Let's talk!</p>
+      <button class="plan-cta outline">Book a demo</button>
+      <div class="plan-seats">👤 ∞ Unlimited seats</div>
+      <p class="plan-everything">Everything included in Pro +</p>
+      <ul class="plan-feats">
+        <li><span class="feat-check"></span>Custom contract and pricing</li>
+        <li><span class="feat-check"></span>Custom feature selection</li>
+        <li><span class="feat-check"></span>Dedicated account manager</li>
+        <li><span class="feat-check"></span>White glove setup</li>
+      </ul>
+      <button class="plan-see-all">👇 See all features below</button>
+    </div>
+
+  </div>
+</div>
+
+<!-- FEATURE TABLE -->
+<div class="table-wrap">
+  <h2 class="table-title">Plan comparison with feature list</h2>
+  <table class="feat-table">
+    <thead>
+      <tr>
+        <th></th>
+        <th>
+          <div class="th-name"><span>Starter</span><span class="plan-dot" style="background:var(--starter-dot);width:10px;height:10px"></span></div>
+          <div class="th-price-strike" id="th-s-strike"></div>
+          <div class="th-price-main" id="th-s-price"></div>
+          <div class="th-billed" id="th-s-billed"></div>
+          <button class="th-cta" onclick="openTrial('starter')">Start FREE trial</button>
+        </th>
+        <th style="border-left:2px solid var(--yellow)">
+          <div class="th-name"><span>Growth</span><span class="plan-dot" style="background:var(--growth-dot);width:10px;height:10px"></span></div>
+          <div class="th-price-strike" id="th-g-strike"></div>
+          <div class="th-price-main" id="th-g-price"></div>
+          <div class="th-billed" id="th-g-billed"></div>
+          <button class="th-cta filled" onclick="openTrial('growth')">Start FREE trial</button>
+        </th>
+        <th>
+          <div class="th-name"><span>Pro</span><span class="plan-dot" style="background:var(--pro-dot);width:10px;height:10px"></span></div>
+          <div class="th-price-strike" id="th-p-strike"></div>
+          <div class="th-price-main" id="th-p-price"></div>
+          <div class="th-billed" id="th-p-billed"></div>
+          <button class="th-cta" onclick="openTrial('pro')">Start FREE trial</button>
+        </th>
+        <th>
+          <div class="th-name"><span>Custom Plan</span><span class="plan-dot" style="background:var(--navy);width:10px;height:10px"></span></div>
+          <div style="font-size:20px;font-weight:800;text-align:center;padding:10px 0 18px">Let's talk!</div>
+          <button class="th-cta">Book a demo</button>
+        </th>
+      </tr>
+    </thead>
+    <tbody>
+
+      <!-- DIGITAL GUIDE BOOK -->
+      <tr class="sec-row"><td colspan="5">📖 Digital Guide Book</td></tr>
+      <tr class="dat-row"><td>Guest view</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Shared content management via Content hub</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Create guidebook from online listing</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Guide branding (Your logo and colors)</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Local recommendations with Google Places</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Variables - Dynamic texts</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Translations / Additional languages</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>PIN access</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>QR code links</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Offline &amp; PDF guidebook</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Content feedback — "Was this helpful?"</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Guide performance analytics</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Content collection</td><td><span class="ck-no">×</span></td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+
+      <!-- GUEST MANAGEMENT -->
+      <tr class="sec-row"><td colspan="5">👥 Guest Management (CRM)</td></tr>
+      <tr class="dat-row"><td>Number of contacts</td><td><span class="cell-mut">None</span></td><td><span class="cell-val">5,000</span></td><td><span class="cell-val">25,000</span></td><td><span class="cell-val">Unlimited</span></td></tr>
+      <tr class="dat-row"><td>Invitations - Guest specific links</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Time based guidebook access</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Display content by booking source</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Export contacts</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Manual contacts import from CSV file</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Automated import from integrations</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Contact collection in Guidebook</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+
+      <!-- MESSAGE HUB -->
+      <tr class="sec-row"><td colspan="5">✉️ Message Hub</td></tr>
+      <tr class="dat-row"><td>Scheduled E-mail messages (Pre-arrival, check-in, checkout and feedback messages)</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Scheduled SMS messages</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row sms-highlight"><td>SMS limit <span class="sms-new-badge">NEW</span></td><td><span class="ck-no">×</span></td><td><span class="sms-val" id="g-sms">—</span></td><td><span class="sms-val" id="p-sms">—</span></td><td><span class="cell-mut">Custom</span></td></tr>
+      <tr class="dat-row"><td>Two-way SMS's (US only) with custom phone number</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Out-of-office auto-responder</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+
+      <!-- AI CHATBOT -->
+      <tr class="sec-row"><td colspan="5">🤖 AI Chatbot</td></tr>
+      <tr class="dat-row"><td>AI-chatbot answer feedback</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Sentiment &amp; Content analysis</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Variables - Dynamic texts</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+
+      <!-- REVIEWS & FEEDBACK -->
+      <tr class="sec-row"><td colspan="5">⭐ Reviews &amp; Feedback</td></tr>
+      <tr class="dat-row"><td>In-guide First impression form</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>In-guide Review form</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>"Do you like this guidebook?" pop-up</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>"Leave a review" pop-up</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Google reviews collection automation</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Rating dashboard</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+
+      <!-- STORE -->
+      <tr class="sec-row"><td colspan="5">🛒 Store (E-commerce / Upsells)</td></tr>
+      <tr class="dat-row"><td>Sell any product or service</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Products with variations</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Order management</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Order notifications (SMS, E-mail)</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Online payments (credit cards, Google Pay, Apple Pay, 3D-secure...)</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Off-platform payments</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Tax management</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+
+      <!-- APPS & INTEGRATIONS -->
+      <tr class="sec-row"><td colspan="5">🔌 Apps &amp; Integrations</td></tr>
+      <tr class="dat-row"><td>Create guidebook from online listing</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Sync booking data</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Custom elements / Embed Widgets</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Marketplace - Experience Partners</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+
+      <!-- TEAM & OPS -->
+      <tr class="sec-row"><td colspan="5">👥 Team &amp; Ops management</td></tr>
+      <tr class="dat-row"><td>Team management</td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Team seats / Users included</td><td><span class="cell-val">1</span></td><td><span class="cell-val">5</span></td><td><span class="cell-val">Unlimited</span></td><td><span class="cell-val">Unlimited</span></td></tr>
+
+      <!-- OTHER -->
+      <tr class="sec-row"><td colspan="5">⚙️ Other</td></tr>
+      <tr class="dat-row"><td>Custom domain</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Sub-domains</td><td><span class="ck-no">×</span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td><td><span class="ck-yes"></span></td></tr>
+      <tr class="dat-row"><td>Personalized Onboarding <small style="color:var(--muted)">(We help you setup your guides and system)</small></td><td><span class="cell-mut">for 7+ guidebooks</span></td><td><span class="cell-mut">for 7+ guidebooks</span></td><td><span class="cell-mut">for 7+ guidebooks</span></td><td><span class="cell-mut">for 7+ guidebooks</span></td></tr>
+      <tr class="dat-row"><td>Support</td><td><span class="cell-mut">Response in &lt;12 hrs</span></td><td><span class="cell-mut">Response in &lt;8 hrs</span></td><td><span class="cell-mut">Response in &lt;4 hrs</span></td><td><span class="cell-mut">Response in &lt;2 hrs</span></td></tr>
+
+    </tbody>
+  </table>
+</div>
+
+<p class="footer-note">* Scheduled SMS messages are subject to fair usage policy and apply to main destination locations.</p>
+
+<script>
+const pricingData = {
+  usd: {
+    starter: {
+      yearly:  [99,150,195,240,285,329,372,414,455,495,530,565,600,635,670,704,738,772,806,840,873,906,939,972,1005,1037,1069,1101,1133,1165,1196,1227,1258,1289,1320,1350,1380,1410,1440,1470,1500,1530,1560,1590,1620,1650,1680,1710,1740,1770,1799,1828,1857,1886,1915,1944,1973,2002,2031,2060,2088,2116,2144,2172,2200,2228,2256,2284,2312,2340,2367,2394,2421,2448,2475,2502,2529,2556,2583,2610,2636,2662,2688,2714,2740,2766,2792,2818,2844,2870],
+      monthly: [12.5,17.6,22.1,26.6,31.1,35.5,39.8,44,48.1,52.1,55.6,59.1,62.6,66.1,69.6,73,76.4,79.8,83.2,86.6,89.9,93.2,96.5,99.8,103.1,106.3,109.5,112.7,115.9,119.1,122.2,125.3,128.4,131.5,134.6,137.6,140.6,143.6,146.6,149.6,152.6,155.6,158.6,161.6,164.6,167.6,170.6,173.6,176.6,179.6,182.5,185.4,188.3,191.2,194.1,197,199.9,202.8,205.7,208.6,211.4,214.2,217,219.8,222.6,225.4,228.2,231,233.8,236.6,239.3,242,244.7,247.4,250.1,252.8,255.5,258.2,260.9,263.6,266.2,268.8,271.4,274,276.6,279.2,281.8,284.4,287,289.6]
+    },
+    growth: {
+      yearly:  [139,244,334,414,487,555,619,680,738,793,846,897,947,995,1042,1088,1133,1177,1220,1262,1303,1343,1383,1422,1460,1498,1535,1572,1608,1644,1679,1714,1748,1782,1816,1849,1882,1914,1946,1978,2009,2040,2071,2102,2132,2162,2192,2222,2251,2280,2309,2338,2366,2394,2422,2450,2478,2505,2532,2559,2586,2613,2640,2666,2692,2718,2744,2770,2796,2821,2846,2871,2896,2921,2946,2971,2995,3019,3043,3067,3091,3115,3139,3163,3187,3210,3233,3256,3279,3302,3325,3348,3371,3394,3416,3438,3460,3482,3504,3526],
+      monthly: [15,26.4,36.1,44.7,52.6,59.9,66.8,73.3,79.5,85.5,91.2,96.8,102.2,107.4,112.5,117.4,122.2,126.9,131.5,136,140.4,144.8,149.1,153.3,157.4,161.5,165.5,169.5,173.4,177.2,181,184.8,188.5,192.2,195.8,199.4,202.9,206.4,209.9,213.3,216.7,220.1,223.4,226.7,230,233.2,236.4,239.6,242.8,245.9,249,252.1,255.2,258.2,261.2,264.2,267.2,270.2,273.1,276,278.9,281.8,284.7,287.5,290.3,293.1,295.9,298.7,301.5,304.2,306.9,309.6,312.3,315,317.7,320.4,323,325.6,328.2,330.8,333.4,336,338.6,341.1,343.6,346.1,348.6,351.1,353.6,356.1,358.6,361.1,363.5,365.9,368.3,370.7,373.1,375.5,377.9,380.3]
+    },
+    pro: {
+      yearly:  [159,279,381,472,556,634,707,776,842,905,966,1025,1082,1137,1191,1243,1294,1344,1393,1441,1488,1534,1579,1624,1668,1711,1754,1796,1837,1878,1918,1958,1997,2036,2074,2112,2150,2187,2224,2260,2296,2332,2367,2402,2437,2471,2505,2539,2573,2606,2639,2672,2704,2736,2768,2800,2832,2863,2894,2925,2956,2987,3017,3047,3077,3107,3137,3166,3195,3224,3253,3282,3311,3339,3367,3395,3423,3451,3479,3507,3534,3561,3588,3615,3642,3669,3696,3723,3749,3775,3801,3827,3853,3879,3905,3931,3957,3982,4007,4032],
+      monthly: [18,31.6,43.2,53.5,63,71.8,80.1,87.9,95.4,102.6,109.5,116.2,122.7,129,135.1,141,146.8,152.5,158,163.4,168.7,173.9,179,184,189,193.9,198.7,203.4,208.1,212.7,217.3,221.8,226.2,230.6,234.9,239.2,243.4,247.6,251.8,255.9,260,264,268,272,275.9,279.8,283.7,287.5,291.3,295.1,298.8,302.5,306.2,309.9,313.5,317.1,320.7,324.2,327.7,331.2,334.7,338.2,341.6,345,348.4,351.8,355.1,358.4,361.7,365,368.3,371.6,374.8,378,381.2,384.4,387.6,390.8,393.9,397,400.1,403.2,406.3,409.4,412.4,415.4,418.4,421.4,424.4,427.4,430.4,433.3,436.2,439.1,442,444.9,447.8,450.7,453.6,456.5]
+    }
+  },
+  gbp: {
+    starter: {
+      yearly:  [73,111,144,177,210,243,275,306,336,366,392,418,444,470,496,521,546,571,596,621,645,669,693,717,741,765,789,813,837,861,884,907,930,953,976,998,1020,1042,1064,1086,1108,1130,1152,1174,1196,1218,1240,1262,1284,1306,1327,1348,1369,1390,1411,1432,1453,1474,1495,1516,1537,1558,1579,1600,1621,1642,1663,1684,1705,1726,1746,1766,1786,1806,1826,1846,1866,1886,1906,1926,1945,1964,1983,2002,2021,2040,2059,2078,2097,2116],
+      monthly: [9.3,13.1,16.4,19.7,23,26.3,29.5,32.6,35.6,38.6,41.2,43.8,46.4,49,51.6,54.1,56.6,59.1,61.6,64.1,66.5,68.9,71.3,73.7,76.1,78.5,80.9,83.3,85.7,88.1,90.4,92.7,95,97.3,99.6,101.8,104,106.2,108.4,110.6,112.8,115,117.2,119.4,121.6,123.8,126,128.2,130.4,132.6,134.7,136.8,138.9,141,143.1,145.2,147.3,149.4,151.5,153.6,155.7,157.8,159.9,162,164.1,166.2,168.3,170.4,172.5,174.6,176.6,178.6,180.6,182.6,184.6,186.6,188.6,190.6,192.6,194.6,196.5,198.4,200.3,202.2,204.1,206,207.9,209.8,211.7,213.6]
+    },
+    growth: {
+      yearly:  [103,181,248,307,361,411,458,503,546,587,626,664,701,737,772,806,839,872,904,935,965,995,1025,1054,1082,1110,1137,1164,1191,1218,1244,1270,1295,1320,1345,1369,1393,1417,1441,1465,1488,1511,1534,1557,1579,1601,1623,1645,1666,1687,1708,1729,1750,1771,1792,1813,1834,1854,1874,1894,1914,1934,1954,1973,1992,2011,2030,2049,2068,2087,2106,2125,2144,2163,2182,2201,2219,2237,2255,2273,2291,2309,2327,2345,2363,2380,2397,2414,2431,2448,2465,2482,2499,2516,2532,2548,2564,2580,2596,2612],
+      monthly: [11.1,19.1,26.1,32.1,38.1,43.1,48.1,53.1,58.1,62.1,66.1,70.1,74.1,78.1,82.1,86.1,90.1,93.1,96.1,99.1,102.1,105.1,108.1,111.1,114.1,117.1,120.1,123.1,126.1,129.1,132.1,135.1,138.1,141.1,144.1,147.1,150.1,153.1,156.1,159.1,162.1,165.1,167.1,169.1,171.1,173.1,175.1,177.1,179.1,181.1,183.1,185.1,187.1,189.1,191.1,193.1,195.1,197.1,199.1,201.1,203.1,205.1,207.1,209.1,211.1,213.1,215.1,217.1,219.1,221.1,223.1,225.1,227.1,229.1,231.1,233.1,235.1,237.1,239.1,241.1,243.1,245.1,247.1,249.1,251.1,253.1,255.1,257.1,259.1,261.1,263.1,265.1,267.1,269.1,271.1,273.1,275.1,277.1,279.1,281.1]
+    },
+    pro: {
+      yearly:  [118,207,283,350,412,470,524,575,624,671,716,760,802,843,883,922,960,997,1033,1069,1104,1138,1171,1204,1237,1269,1301,1332,1362,1392,1422,1452,1481,1510,1538,1566,1594,1621,1648,1675,1702,1729,1755,1781,1807,1832,1857,1882,1907,1931,1955,1979,2003,2027,2051,2075,2099,2122,2145,2168,2191,2214,2236,2258,2280,2302,2324,2345,2366,2387,2408,2429,2450,2471,2492,2513,2534,2555,2576,2597,2617,2637,2657,2677,2697,2717,2737,2757,2776,2795,2814,2833,2852,2871,2890,2909,2928,2947,2966,2985],
+      monthly: [13.3,23.3,32.3,40.3,47.3,54.3,60.3,66.3,72.3,77.3,82.3,87.3,92.3,97.3,102.3,106.3,110.3,114.3,118.3,122.3,126.3,130.3,134.3,138.3,142.3,146.3,150.3,153.3,156.3,159.3,162.3,165.3,168.3,171.3,174.3,177.3,180.3,183.3,186.3,189.3,192.3,195.3,198.3,201.3,204.3,207.3,210.3,213.3,216.3,219.3,222.3,225.3,228.3,231.3,234.3,237.3,240.3,243.3,246.3,249.3,252.3,255.3,258.3,261.3,264.3,267.3,269.3,271.3,273.3,275.3,277.3,279.3,281.3,283.3,285.3,287.3,289.3,291.3,293.3,295.3,297.3,299.3,301.3,303.3,305.3,307.3,309.3,311.3,313.3,315.3,317.3,319.3,321.3,323.3,325.3,327.3,329.3,331.3,333.3,335.3]
+    }
+  },
+  eur: {
+    starter: {
+      yearly:  [85,129,167,205,243,281,318,354,389,423,453,483,513,543,573,602,631,660,689,718,746,774,802,830,858,885,912,939,966,993,1019,1045,1071,1097,1123,1149,1175,1201,1227,1253,1279,1305,1331,1357,1383,1409,1435,1461,1487,1513,1538,1563,1588,1613,1638,1663,1688,1713,1738,1763,1787,1811,1835,1859,1883,1907,1931,1955,1979,2003,2026,2049,2072,2095,2118,2141,2164,2187,2210,2233,2255,2277,2299,2321,2343,2365,2387,2409,2431,2453],
+      monthly: [10.7,15.1,18.9,22.7,26.5,30.3,34,37.6,41.1,44.5,47.5,50.5,53.5,56.5,59.5,62.4,65.3,68.2,71.1,74,76.8,79.6,82.4,85.2,88,90.7,93.4,96.1,98.8,101.5,104.1,106.7,109.3,111.9,114.5,117.1,119.7,122.3,124.9,127.5,130.1,132.7,135.3,137.9,140.5,143.1,145.7,148.3,150.9,153.5,156,158.5,161,163.5,166,168.5,171,173.5,176,178.5,180.9,183.3,185.7,188.1,190.5,192.9,195.3,197.7,200.1,202.5,204.8,207.1,209.4,211.7,214,216.3,218.6,220.9,223.2,225.5,227.7,229.9,232.1,234.3,236.5,238.7,240.9,243.1,245.3,247.5]
+    },
+    growth: {
+      yearly:  [119,209,286,354,416,474,529,581,631,678,723,767,810,851,891,930,968,1006,1043,1079,1114,1148,1182,1215,1247,1279,1311,1343,1374,1405,1435,1465,1494,1523,1552,1580,1608,1635,1662,1689,1715,1741,1767,1793,1819,1845,1871,1897,1922,1947,1972,1997,2021,2045,2069,2093,2117,2140,2163,2186,2209,2232,2255,2277,2299,2321,2343,2365,2387,2408,2429,2450,2471,2492,2513,2534,2555,2576,2597,2618,2639,2660,2681,2702,2723,2743,2763,2783,2803,2823,2843,2863,2883,2903,2922,2941,2960,2979,2998,3017],
+      monthly: [12.8,22.5,30.8,38.2,45,51.2,57.1,62.7,68,73.1,78,82.8,87.4,91.8,96.2,100.4,104.5,108.5,112.4,116.2,120,123.8,127.5,131.1,134.6,138.1,141.5,144.9,148.2,151.4,154.6,157.8,161,164.2,167.3,170.4,173.4,176.4,179.4,182.3,185.2,188.1,190.9,193.7,196.5,199.2,201.9,204.6,207.3,209.9,212.5,215.1,217.7,220.3,222.9,225.5,228.1,230.7,233.2,235.7,238.2,240.7,243.2,245.6,248,250.4,252.8,255.2,257.6,259.9,262.2,264.5,266.8,269.1,271.4,273.7,275.9,278.1,280.3,282.5,284.7,286.9,289.1,291.2,293.3,295.4,297.5,299.6,301.7,303.8,305.9,308,310.1,312.2,314.3,316.4,318.5,320.6,322.7,324.8]
+    },
+    pro: {
+      yearly:  [136,239,326,404,476,543,605,664,720,774,826,876,925,972,1018,1062,1106,1149,1191,1232,1272,1311,1349,1387,1425,1462,1499,1535,1570,1605,1639,1673,1706,1739,1771,1803,1835,1867,1899,1930,1961,1992,2022,2052,2082,2111,2140,2169,2198,2226,2254,2282,2309,2336,2363,2390,2417,2443,2469,2495,2521,2547,2573,2599,2625,2651,2677,2702,2727,2752,2777,2802,2827,2851,2875,2899,2923,2947,2971,2995,3018,3041,3064,3087,3110,3133,3156,3179,3201,3223,3245,3267,3289,3311,3333,3355,3377,3398,3419,3440],
+      monthly: [15.4,27,36.9,45.7,53.8,61.3,68.4,75.1,81.5,87.7,93.6,99.3,104.9,110.3,115.5,120.5,125.5,130.4,135.1,139.7,144.2,148.6,153,157.3,161.6,165.8,169.9,173.9,177.9,181.8,185.7,189.5,193.3,197.1,200.8,204.5,208.1,211.7,215.3,218.8,222.3,225.7,229.1,232.5,235.8,239.1,242.4,245.6,248.8,252,255.2,258.4,261.6,264.8,267.9,271,274.1,277.1,280.1,283.1,286.1,289.1,292,294.9,297.8,300.7,303.5,306.3,309.1,311.9,314.7,317.5,320.2,322.9,325.6,328.3,331,333.7,336.3,338.9,341.5,344.1,346.7,349.3,351.9,354.5,357.1,359.7,362.3,364.9,367.5,370,372.5,375,377.5,380,382.5,385,387.5,390]
+    }
+  },
+  aud: {
+    starter: {
+      yearly:  [148,224,291,358,425,491,555,618,679,739,791,843,895,947,999,1050,1101,1152,1203,1254,1303,1352,1401,1450,1499,1547,1595,1643,1691,1739,1785,1831,1877,1923,1969,2014,2059,2104,2149,2194,2239,2284,2329,2374,2419,2464,2509,2554,2599,2644,2687,2730,2773,2816,2859,2902,2945,2988,3031,3074,3116,3158,3200,3242,3284,3326,3368,3410,3452,3494,3534,3574,3614,3654,3694,3734,3774,3814,3854,3894,3933,3972,4011,4050,4089,4128,4167,4206,4245,4284],
+      monthly: [18.7,26.3,33,39.7,46.4,53,59.4,65.7,71.8,77.8,83,88.2,93.4,98.6,103.8,108.9,114,119.1,124.2,129.3,134.2,139.1,144,148.9,153.8,158.6,163.4,168.2,173,177.8,182.4,187,191.6,196.2,200.8,205.3,209.8,214.3,218.8,223.3,227.8,232.3,236.8,241.3,245.8,250.3,254.8,259.3,263.8,268.3,272.6,276.9,281.2,285.5,289.8,294.1,298.4,302.7,307,311.3,315.5,319.7,323.9,328.1,332.3,336.5,340.7,344.9,349.1,353.3,357.3,361.3,365.3,369.3,373.3,377.3,381.3,385.3,389.3,393.3,397.2,401.1,405,408.9,412.8,416.7,420.6,424.5,428.4,432.3]
+    },
+    growth: {
+      yearly:  [207,364,498,617,726,827,923,1014,1101,1183,1262,1338,1413,1485,1555,1624,1691,1757,1821,1884,1945,2005,2065,2123,2180,2237,2292,2347,2401,2455,2507,2559,2610,2661,2712,2761,2810,2858,2906,2954,3000,3046,3092,3138,3183,3228,3273,3318,3361,3404,3447,3490,3532,3574,3616,3658,3700,3740,3780,3820,3860,3900,3940,3979,4018,4057,4096,4135,4174,4211,4248,4285,4322,4359,4396,4433,4469,4505,4541,4577,4613,4649,4685,4721,4757,4791,4825,4859,4893,4927,4961,4995,5029,5063,5096,5129,5162,5195,5228,5261],
+      monthly: [22.4,39.4,53.9,66.7,78.5,89.4,99.7,109.4,118.7,127.7,136.2,144.6,152.7,160.5,168.1,175.4,182.6,189.6,196.5,203.2,209.8,216.4,222.8,229.1,235.2,241.3,247.3,253.3,259.1,264.8,270.5,276.2,281.7,287.2,292.6,298,303.2,308.4,313.6,318.7,323.8,328.9,333.8,338.7,343.6,348.4,353.2,358,362.8,367.4,372,376.6,381.2,385.7,390.2,394.7,399.2,403.7,408,412.3,416.6,420.9,425.2,429.4,433.6,437.8,442,446.2,450.4,454.4,458.4,462.4,466.4,470.4,474.4,478.4,482.3,486.2,490.1,494,497.9,501.8,505.7,509.4,513.1,516.8,520.5,524.2,527.9,531.6,535.3,539,542.6,546.2,549.8,553.4,557,560.6,564.2,567.8]
+    },
+    pro: {
+      yearly:  [237,416,568,704,829,945,1054,1157,1256,1350,1441,1529,1614,1696,1777,1855,1931,2006,2079,2151,2221,2290,2357,2424,2490,2554,2618,2681,2742,2803,2863,2923,2981,3039,3096,3153,3210,3265,3320,3374,3428,3482,3534,3586,3638,3689,3740,3791,3842,3891,3940,3989,4037,4085,4133,4181,4229,4275,4321,4367,4413,4459,4504,4549,4594,4639,4684,4727,4770,4813,4856,4899,4942,4984,5026,5068,5110,5152,5194,5236,5276,5316,5356,5396,5436,5476,5516,5556,5595,5634,5673,5712,5751,5790,5829,5868,5907,5944,5981,6018],
+      monthly: [26.9,47.2,64.5,79.9,94.1,107.2,119.6,131.2,142.4,153.1,163.4,173.4,183.1,192.5,201.6,210.4,219.1,227.6,235.8,243.9,251.8,259.6,267.2,274.7,282.2,289.5,296.7,303.7,310.7,317.6,324.5,331.2,337.8,344.4,350.8,357.2,363.5,369.8,376.1,382.2,388.3,394.3,400.3,406.3,412.1,417.9,423.7,429.4,435.1,440.8,446.3,451.8,457.3,462.8,468.2,473.6,479,484.2,489.4,494.6,499.8,505,510.1,515.2,520.3,525.4,530.3,535.2,540.1,545,549.9,554.8,559.6,564.4,569.2,574,578.8,583.6,588.2,592.8,597.4,602,606.6,611.2,615.7,620.2,624.7,629.2,633.7,638.2,642.7,647,651.3,655.6,659.9,664.2,668.5,672.8,677.1,681.4]
+    }
+  }
+};
+
+const extrapolationRates = {
+  usd: { starter:{yearly:26,monthly:2.6}, growth:{yearly:22,monthly:2.4}, pro:{yearly:25,monthly:2.9} },
+  gbp: { starter:{yearly:19,monthly:1.9}, growth:{yearly:16,monthly:2.0}, pro:{yearly:19,monthly:2.0} },
+  eur: { starter:{yearly:22,monthly:2.2}, growth:{yearly:19,monthly:2.1}, pro:{yearly:21,monthly:2.5} },
+  aud: { starter:{yearly:39,monthly:3.9}, growth:{yearly:33,monthly:3.6}, pro:{yearly:37,monthly:4.3} }
+};
+
+const SYM = { usd:'$', gbp:'£', eur:'€', aud:'A$' };
+
+let billing = 'yearly';
+
+function calcPrice(plan, bt, qty, cur) {
+  if (qty <= 0) return 0;
+  const tbl = pricingData[cur][plan][bt];
+  const max = tbl.length;
+  if (qty <= max) return tbl[qty - 1];
+  return tbl[max - 1] + (qty - max) * extrapolationRates[cur][plan][bt];
+}
+
+function fmtMoney(v, sym) {
+  const n = Math.round(v * 100) / 100;
+  if (n >= 1000) return sym + n.toLocaleString('en-US', {maximumFractionDigits:0});
+  return sym + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+}
+
+function priceHTML(v, sym) {
+  const n = Math.round(v * 100) / 100;
+  const intPart = Math.floor(n);
+  const decStr  = String(Math.round((n - intPart) * 100)).padStart(2, '0');
+  return `<span class="sym">${sym}</span><span class="int">${intPart.toLocaleString('en-US')}</span><span class="dec">.${decStr}</span><span class="per">/ month</span>`;
+}
+
+function setBilling(b) {
+  billing = b;
+  document.getElementById('btnAnnual').classList.toggle('active', b === 'yearly');
+  document.getElementById('btnMonthly').classList.toggle('active', b === 'monthly');
+  render();
+}
+
+function render() {
+  const qty = Math.max(1, parseInt(document.getElementById('qty').value) || 1);
+  const cur = document.getElementById('currency').value;
+  const sym = SYM[cur];
+
+  ['starter','growth','pro'].forEach(plan => {
+    const pfx = { starter:'s', growth:'g', pro:'p' }[plan];
+    const mo  = calcPrice(plan, 'monthly', qty, cur);
+    const yr  = calcPrice(plan, 'yearly',  qty, cur);
+    const moEq = yr / 12;
+
+    if (billing === 'yearly') {
+      // card
+      document.getElementById(`${pfx}-strike`).innerHTML = `<s>${fmtMoney(mo, sym)}</s>`;
+      document.getElementById(`${pfx}-price`).innerHTML  = priceHTML(moEq, sym);
+      document.getElementById(`${pfx}-pp`).textContent   = qty > 1 ? `${fmtMoney(moEq / qty, sym)} per property` : '';
+      document.getElementById(`${pfx}-billed`).textContent = `Billed ${fmtMoney(yr, sym)} / year`;
+      // table header
+      if (document.getElementById(`th-${pfx}-strike`)) {
+        document.getElementById(`th-${pfx}-strike`).innerHTML = `<s>${fmtMoney(mo, sym)}</s>`;
+        document.getElementById(`th-${pfx}-price`).textContent = `${fmtMoney(moEq, sym)} / mo`;
+        document.getElementById(`th-${pfx}-billed`).textContent = `Billed ${fmtMoney(yr, sym)} / yr`;
+      }
+    } else {
+      document.getElementById(`${pfx}-strike`).innerHTML = '';
+      document.getElementById(`${pfx}-price`).innerHTML  = priceHTML(mo, sym);
+      document.getElementById(`${pfx}-pp`).textContent   = qty > 1 ? `${fmtMoney(mo / qty, sym)} per property` : '';
+      document.getElementById(`${pfx}-billed`).textContent = '';
+      if (document.getElementById(`th-${pfx}-strike`)) {
+        document.getElementById(`th-${pfx}-strike`).innerHTML = '';
+        document.getElementById(`th-${pfx}-price`).textContent = `${fmtMoney(mo, sym)} / mo`;
+        document.getElementById(`th-${pfx}-billed`).textContent = '';
+      }
+    }
+  });
+
+  // SMS limit — based on yearly price / 12 (monthly equivalent at annual billing)
+  const gYr = calcPrice('growth', 'yearly', qty, cur);
+  const pYr = calcPrice('pro',    'yearly', qty, cur);
+  const gSMS = Math.round((0.08 * (gYr / 12)) / 0.03);
+  const pSMS = Math.round((0.12 * (pYr / 12)) / 0.03);
+  window._smsLimits = { growth: gSMS, pro: pSMS };
+  document.getElementById('g-sms').textContent = gSMS.toLocaleString('en-US') + ' SMS/mo';
+  document.getElementById('p-sms').textContent = pSMS.toLocaleString('en-US') + ' SMS/mo';
+}
+
+// Type tabs
+document.querySelectorAll('.type-tab').forEach(btn => {
+  btn.addEventListener('click', function() {
+    document.querySelectorAll('.type-tab').forEach(b => b.classList.remove('active'));
+    this.classList.add('active');
+  });
+});
+
+document.getElementById('qty').addEventListener('input', render);
+document.getElementById('currency').addEventListener('change', render);
+
+render();
+
+function openTrial(plan) {
+  const planNames = { starter: 'Starter', growth: 'Growth', pro: 'Pro' };
+  const planDots  = { starter: '#0dd9c9', growth: '#f5c61a', pro: '#8b5cf6' };
+  const seats     = { starter: '1/1', growth: '1/5', pro: '1/∞' };
+  const crm       = { starter: '0/0', growth: '0/5,000', pro: '0/25,000' };
+  const limits    = window._smsLimits || { growth: 0, pro: 0 };
+  const smsLimit  = plan === 'starter' ? null : limits[plan];
+  const smsDisplay = smsLimit != null ? `0/${smsLimit.toLocaleString('en-US')}` : 'Not available';
+
+  document.getElementById('trial-plan-name').textContent = planNames[plan];
+  document.getElementById('trial-plan-dot').style.background = planDots[plan];
+  document.getElementById('trial-crm').textContent = crm[plan];
+  document.getElementById('trial-sms').textContent = smsDisplay;
+  document.getElementById('trial-seats').textContent = seats[plan];
+  document.getElementById('trial-overlay').style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeTrial() {
+  document.getElementById('trial-overlay').style.display = 'none';
+  document.body.style.overflow = '';
+}
+</script>
+
+<!-- Billing page overlay -->
+<div id="trial-overlay" style="display:none;position:fixed;inset:0;z-index:1000;background:#f1f5f9;flex-direction:column;overflow-y:auto">
+  <!-- App top bar -->
+  <div style="background:#17293c;color:white;height:52px;display:flex;align-items:center;padding:0 20px;gap:16px;flex-shrink:0">
+    <div style="background:#0db5b5;border-radius:8px;width:32px;height:32px;display:flex;align-items:center;justify-content:center">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+    </div>
+    <span style="font-weight:600;font-size:14px">Short Term Rental</span>
+    <span style="margin-left:auto;font-size:13px;color:#94a3b8">Help &amp; Support</span>
+    <div style="width:32px;height:32px;border-radius:50%;background:#0db5b5;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:13px">C</div>
+  </div>
+  <div style="display:flex;flex:1;min-height:0">
+    <!-- Sidebar -->
+    <div style="width:200px;background:white;border-right:1px solid #e2e8f0;padding:16px 0;flex-shrink:0;font-size:13px">
+      <div style="padding:4px 16px 12px;color:#64748b;font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.05em">Menu</div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">📋 Guides</div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">🔍</div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">📚 Content Hub</div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">👥 Contacts <span style="background:#0db5b5;color:white;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px">NEW</span></div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">💬 Message Hub</div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">✅ Tasks <span style="background:#0db5b5;color:white;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px">NEW</span></div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">🛒 Store <span style="background:#0db5b5;color:white;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px">NEW</span></div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">📣 Campaigns <span style="background:#0db5b5;color:white;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px">NEW</span></div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">⚙️ Settings</div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">🔗 Integrations</div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">🏪 Marketplace <span style="background:#0db5b5;color:white;font-size:10px;padding:1px 5px;border-radius:4px;margin-left:4px">NEW</span></div>
+      <div style="padding:8px 16px;display:flex;align-items:center;gap:10px;color:#64748b">📊 Data Dashboard</div>
+    </div>
+    <!-- Main content -->
+    <div style="flex:1;padding:32px 40px;overflow-y:auto">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:4px">
+        <h1 style="font-size:24px;font-weight:700;color:#17293c">Claude Code - Catalin Organisation</h1>
+        <button onclick="closeTrial()" style="padding:6px 16px;border:1.5px solid #e2e8f0;border-radius:8px;background:white;font-size:13px;font-weight:600;cursor:pointer;color:#17293c">← Back to pricing</button>
+      </div>
+      <div style="color:#64748b;font-size:13px;margin-bottom:20px">Total guides: 1</div>
+      <!-- Tabs -->
+      <div style="display:flex;gap:0;border-bottom:2px solid #e2e8f0;margin-bottom:28px">
+        <div style="padding:8px 16px;color:#64748b;font-size:13px;font-weight:500;cursor:pointer">Profile</div>
+        <div style="padding:8px 16px;color:#0db5b5;font-size:13px;font-weight:600;border-bottom:2px solid #0db5b5;margin-bottom:-2px">Billing</div>
+        <div style="padding:8px 16px;color:#64748b;font-size:13px;font-weight:500;cursor:pointer">Team</div>
+        <div style="padding:8px 16px;color:#64748b;font-size:13px;font-weight:500;cursor:pointer">Templates</div>
+        <div style="padding:8px 16px;color:#64748b;font-size:13px;font-weight:500;cursor:pointer">Refer a friend</div>
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:32px;max-width:900px">
+        <!-- Current plan -->
+        <div>
+          <h2 style="font-size:14px;font-weight:600;color:#17293c;margin-bottom:20px">Your current plan</h2>
+          <div style="background:white;border-radius:12px;padding:24px;border:1px solid #e2e8f0">
+            <div style="font-size:11px;color:#64748b;font-weight:500;text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px">Active plan</div>
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
+              <span style="font-size:22px;font-weight:700;color:#17293c" id="trial-plan-name">Growth</span>
+              <span style="font-size:12px;color:#64748b;font-weight:500">[Trial]</span>
+              <span id="trial-plan-dot" style="width:14px;height:14px;border-radius:50%;background:#f5c61a;margin-left:auto"></span>
+            </div>
+            <div style="font-size:13px;font-weight:600;color:#17293c;margin-bottom:16px">Trial: 15 days left</div>
+            <div style="height:4px;background:#e2e8f0;border-radius:2px;margin-bottom:16px"><div style="height:100%;background:#0db5b5;border-radius:2px;width:100%"></div></div>
+            <div style="background:#fff8f0;border:1px solid #fed7aa;border-radius:8px;padding:12px;font-size:12px;color:#92400e;margin-bottom:16px">
+              🎁 We gave you access to our highest plan to try all the features to the max.
+            </div>
+            <button style="width:100%;padding:11px;background:#0db5b5;border:none;border-radius:8px;color:white;font-weight:600;font-size:13px;cursor:pointer">Subscribe now</button>
+          </div>
+        </div>
+        <!-- Usage -->
+        <div>
+          <h2 style="font-size:14px;font-weight:600;color:#17293c;margin-bottom:20px">Usage</h2>
+          <div style="background:white;border-radius:12px;padding:24px;border:1px solid #e2e8f0;display:flex;flex-direction:column;gap:20px">
+            <!-- Properties -->
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:#17293c;margin-bottom:2px">Number of properties / guides created</div>
+                <div style="font-size:11px;color:#64748b">Using all of the resources. Purchase more to create some more.</div>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:#ef4444;min-width:40px;text-align:right">1/1</div>
+            </div>
+            <div style="height:3px;background:#e2e8f0;border-radius:2px"><div style="height:100%;background:#ef4444;border-radius:2px;width:100%"></div></div>
+            <!-- CRM -->
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:#17293c;margin-bottom:2px">CRM contacts</div>
+                <div style="font-size:11px;color:#64748b">You can add more CRM contacts.</div>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:#17293c;min-width:60px;text-align:right" id="trial-crm">0/5,000</div>
+            </div>
+            <div style="height:3px;background:#e2e8f0;border-radius:2px"><div style="height:100%;background:#0db5b5;border-radius:2px;width:1%"></div></div>
+            <!-- Memo SMS -->
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:#17293c;margin-bottom:2px">Memo SMS</div>
+                <div style="font-size:11px;color:#64748b">You have room for more SMS.</div>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:#17293c;min-width:80px;text-align:right" id="trial-sms">0/1,028</div>
+            </div>
+            <div style="height:3px;background:#e2e8f0;border-radius:2px"><div style="height:100%;background:#0db5b5;border-radius:2px;width:1%"></div></div>
+            <!-- Memo emails -->
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:#17293c;margin-bottom:2px">Memo e-mails</div>
+                <div style="font-size:11px;color:#64748b">You have room for more e-mails.</div>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:#17293c;min-width:80px;text-align:right">Unlimited</div>
+            </div>
+            <div style="height:3px;background:#e2e8f0;border-radius:2px"><div style="height:100%;background:#0db5b5;border-radius:2px;width:1%"></div></div>
+            <!-- Team seats -->
+            <div style="display:flex;align-items:center;justify-content:space-between">
+              <div>
+                <div style="font-size:13px;font-weight:500;color:#17293c;margin-bottom:2px">Team seats</div>
+                <div style="font-size:11px;color:#64748b">You have room for more team members.</div>
+              </div>
+              <div style="font-size:13px;font-weight:600;color:#17293c;min-width:40px;text-align:right" id="trial-seats">1/5</div>
+            </div>
+            <div style="height:3px;background:#e2e8f0;border-radius:2px"><div style="height:100%;background:#0db5b5;border-radius:2px;width:20%"></div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
