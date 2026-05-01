@@ -786,10 +786,23 @@ function calcSmsPrice() {
       </label>
     </div>
     <label style="font-size:13px;font-weight:600;color:#17293c;display:block;margin-bottom:8px">How many extra SMS per month do you need?</label>
-    <input id="sms-qty-input" type="number" min="1" step="1" placeholder="e.g. 500"
-      oninput="calcSmsPrice()"
-      style="width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:15px;color:#17293c;outline:none;font-family:inherit"
+    <select id="sms-qty-input" onchange="calcSmsPrice()"
+      style="width:100%;padding:12px 14px;border:1.5px solid #e2e8f0;border-radius:8px;font-size:15px;color:#17293c;outline:none;font-family:inherit;background:white;cursor:pointer"
       onfocus="this.style.borderColor='#0db5b5'" onblur="this.style.borderColor='#e2e8f0'">
+      <option value="">— Select quantity —</option>
+      <option value="5">5 SMS/mo</option>
+      <option value="10">10 SMS/mo</option>
+      <option value="20">20 SMS/mo</option>
+      <option value="40">40 SMS/mo</option>
+      <option value="80">80 SMS/mo</option>
+      <option value="160">160 SMS/mo</option>
+      <option value="320">320 SMS/mo</option>
+      <option value="640">640 SMS/mo</option>
+      <option value="1280">1,280 SMS/mo</option>
+      <option value="2560">2,560 SMS/mo</option>
+      <option value="5000">5,000 SMS/mo</option>
+      <option value="10000">10,000 SMS/mo</option>
+    </select>
     <div id="sms-price-display" style="min-height:48px;margin-top:14px;text-align:center;padding:12px 16px;background:#f8fafc;border-radius:8px"></div>
     <div style="display:flex;gap:10px;margin-top:20px">
       <button onclick="closeSmsModal()" style="flex:1;padding:11px;background:white;border:1.5px solid #e2e8f0;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;color:#64748b">Cancel</button>
