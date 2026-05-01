@@ -5,20 +5,6 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="robots" content="noindex, nofollow">
 <title>Touch Stay — SMS Pricing Prototype</title>
-<script>
-(function(){
-  var correct = '1608';
-  var stored = sessionStorage.getItem('ts_pin');
-  if (stored !== correct) {
-    var attempt = prompt('Enter PIN to access this page:');
-    if (attempt !== correct) {
-      document.documentElement.innerHTML = '<div style="font-family:sans-serif;text-align:center;padding:100px;color:#64748b"><h2>Access Denied</h2><p>Incorrect PIN. Please refresh and try again.</p></div>';
-      throw new Error('Access denied');
-    }
-    sessionStorage.setItem('ts_pin', correct);
-  }
-})();
-</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
@@ -554,11 +540,11 @@ function render() {
   // SMS limit — based on yearly price / 12 (monthly equivalent at annual billing)
   const gYr = calcPrice('growth', 'yearly', qty, cur);
   const pYr = calcPrice('pro',    'yearly', qty, cur);
-  const gSMS = Math.round((0.08 * (gYr / 12)) / 0.03);
-  const pSMS = Math.round((0.12 * (pYr / 12)) / 0.03);
+  const gSMS = Math.floor((0.08 * (gYr / 12)) / 0.03 / 5) * 5;
+  const pSMS = Math.floor((0.12 * (pYr / 12)) / 0.03 / 5) * 5;
   window._smsLimits = { growth: gSMS, pro: pSMS };
-  document.getElementById('g-sms').textContent = gSMS.toLocaleString('en-US') + ' SMS/mo';
-  document.getElementById('p-sms').textContent = pSMS.toLocaleString('en-US') + ' SMS/mo';
+  document.getElementById('g-sms').textContent = '~' + gSMS.toLocaleString('en-US') + ' SMS/mo';
+  document.getElementById('p-sms').textContent = '~' + pSMS.toLocaleString('en-US') + ' SMS/mo';
 }
 
 // Type tabs
